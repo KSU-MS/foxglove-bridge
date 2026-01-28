@@ -1,0 +1,11 @@
+[package]
+name = "foxglove-bridge"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+dbc-codegen = "0.3.0"
+flatbuffers = "25.12.19"
+foxglove = "0.16.6"
+h264_webcam_stream = { git = "https://github.com/ChanceCtrl/h264_webcam_stream", version = "0.1.0" }
+socketcan = "3.5.0"
