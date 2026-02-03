@@ -1,9 +1,7 @@
 mod commands;
-mod sinks;
+mod foxglove_utils;
 mod sources;
 
-// use foxglove_utils::
-
 fn main() {
-    println!("Mrow :3");
+    sources::test_cam();
 }
