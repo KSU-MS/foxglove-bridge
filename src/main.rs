@@ -3,5 +3,5 @@ mod foxglove_utils;
 mod sources;
 
 fn main() {
-    sources::test_cam();
+    sources::test_can();
 }

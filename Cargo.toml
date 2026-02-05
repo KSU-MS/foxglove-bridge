@@ -6,6 +6,11 @@ edition = "2021"
 [dependencies]
 dbc-codegen = "0.3.0"
 flatbuffers = "25.12.19"
-foxglove = "0.17.1"
+foxglove = "0.17.2"
+futures-util = "0.3.31"
 h264_webcam_stream = { git = "https://github.com/ChanceCtrl/h264_webcam_stream", version = "0.1.0" }
-socketcan = "3.5.0"
+tokio = "1.49.0"
+
+[dependencies.socketcan]
+version = "3.5.0"
+features = ["tokio"]
