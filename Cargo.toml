@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-dbc-codegen = "0.3.0"
+dbc-rs = "0.4.1"
 flatbuffers = "25.12.19"
 foxglove = "0.17.2"
 futures-util = "0.3.31"
@@ -14,3 +14,7 @@ tokio = "1.49.0"
 [dependencies.socketcan]
 version = "3.5.0"
 features = ["tokio"]
+
+[dependencies.clap]
+version = "4.5.57"
+features = ["derive"]

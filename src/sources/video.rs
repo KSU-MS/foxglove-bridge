@@ -1,3 +1,4 @@
+mod gopro;
 mod webcam;
 
 pub fn test_cam() {
