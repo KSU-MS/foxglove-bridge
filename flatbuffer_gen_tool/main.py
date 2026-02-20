@@ -16,13 +16,11 @@ def main():
 
     db = cantools.database.load_file(path_to_dbc)
 
-    if db is cantools.database.can.Database:
-        with open("can_dbc.proto", "w+") as proto_file:
-            proto_file.write('syntax = "proto3";\n\n')
-            for msg in db.messages:
-                proto_file = append_proto_message_from_CAN_message(proto_file, msg)
-    else:
-        print("Unsupported DBC type passed")
+    with open(f"{os.path.basename(path_to_dbc)}.fbs", "w+") as fbs_file:
+        fbs_file.write("namespace dbc;\n\n")
+
+        for msg in db.messages:
+            fbs_file = append_proto_message_from_CAN_message(fbs_file, msg)
 
 
 def create_field_name(name: str) -> str:
@@ -33,14 +31,11 @@ def create_field_name(name: str) -> str:
 
 
 def append_proto_message_from_CAN_message(file, can_msg: Message):
-    # if the msg has a conversion, we know that the value with be a float
-    msgname = can_msg.name
-    # type and then name
-    file.write("message " + msgname.lower() + " {\n")
-    line_index = 0
-    for sig in can_msg.signals:
-        line_index += 1
+    # Start the table
+    file.write("table " + can_msg.name.lower() + " {\n")
 
+    for sig in can_msg.signals:
+        # if is_float + edge cases
         if (
             sig.is_float
             or ((sig.scale is not None) and (sig.scale != 1.0))
@@ -54,61 +49,25 @@ def append_proto_message_from_CAN_message(file, can_msg: Message):
                 )
             )
         ):
-            line = (
-                "    float "
-                + create_field_name(sig.name)
-                + " = "
-                + str(line_index)
-                + ";"
-            )
+            line = "   " + create_field_name(sig.name) + ":float;"
+
+        # Enums with named values
         elif sig.choices is not None:
-            line = (
-                "    string "
-                + create_field_name(sig.name)
-                + " = "
-                + str(line_index)
-                + ";"
-            )
+            line = "   " + create_field_name(sig.name) + ":string;"
+
+        # True
         elif sig.length == 1:
-            line = (
-                "    bool "
-                + create_field_name(sig.name)
-                + " = "
-                + str(line_index)
-                + ";"
-            )
+            line = "   " + create_field_name(sig.name) + ":bool;"
+
+        # The ints
         elif sig.length > 1 and sig.length <= 32:
-            line = (
-                "    int32 "
-                + create_field_name(sig.name)
-                + " = "
-                + str(line_index)
-                + ";"
-            )
+            line = "   " + create_field_name(sig.name) + ":int32;"
+
         elif sig.length >= 32 and not sig.is_signed:
-            line = (
-                "    uint64 "
-                + create_field_name(sig.name)
-                + " = "
-                + str(line_index)
-                + ";"
-            )
-        elif sig.length >= 32 and not sig.is_signed:
-            line = (
-                "    uint64 "
-                + create_field_name(sig.name)
-                + " = "
-                + str(line_index)
-                + ";"
-            )
+            line = "   " + create_field_name(sig.name) + ":uint64;"
+
         else:
-            line = (
-                "    int64 "
-                + create_field_name(sig.name)
-                + " = "
-                + str(line_index)
-                + ";"
-            )
+            line = "   " + create_field_name(sig.name) + ":int64;"
         file.write(line + "\n")
     file.write("}\n\n")
     return file

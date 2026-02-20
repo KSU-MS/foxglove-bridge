@@ -22,7 +22,14 @@
       let
         pkgs = (import nixpkgs) {
           inherit system;
-          overlays = [ can_pkg_flake.overlays.default ];
+          overlays = [
+            can_pkg_flake.overlays.default
+            buff_overlay
+          ];
+        };
+
+        buff_overlay = final: prev: {
+          buff_pkg = final.callPackage ./dbc_to_bfbs.nix { };
         };
 
         naersk' = pkgs.callPackage naersk { };
@@ -43,6 +50,8 @@
         # For `nix develop`:
         devShell = pkgs.mkShell {
           packages = with pkgs; [
+            flatbuffers
+            buff_pkg
             can_pkg
           ];
 
@@ -54,7 +63,7 @@
 
           # Setting up the environment variables you need during development.
           shellHook = ''
-            dbc_path=${pkgs.can_pkg}
+            dbc_path=${pkgs.can_pkg}/car.dbc
             export DBC_PATH=$dbc_path
             libclang_path=${NIX_LIBCLANG_PATH}
             export LIBCLANG_PATH=$libclang_path
