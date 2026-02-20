@@ -7,7 +7,7 @@
 pkgs.stdenv.mkDerivation {
   name = "can_bfbs";
 
-  src = ./flatbuffer_gen_tool;
+  src = ./.;
 
   buildInputs = [
     can_pkg

@@ -16,7 +16,7 @@ def main():
 
     db = cantools.database.load_file(path_to_dbc)
 
-    with open(f"{os.path.basename(path_to_dbc)}.fbs", "w+") as fbs_file:
+    with open("can_dbc.fbs", "w+") as fbs_file:
         fbs_file.write("namespace dbc;\n\n")
 
         for msg in db.messages:

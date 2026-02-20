@@ -24,12 +24,12 @@
           inherit system;
           overlays = [
             can_pkg_flake.overlays.default
-            buff_overlay
+            bfbs_overlay
           ];
         };
 
-        buff_overlay = final: prev: {
-          buff_pkg = final.callPackage ./dbc_to_bfbs.nix { };
+        bfbs_overlay = final: prev: {
+          bfbs_pkg = final.callPackage ./dbc_to_bfbs/dbc_to_bfbs.nix { };
         };
 
         naersk' = pkgs.callPackage naersk { };
@@ -51,7 +51,7 @@
         devShell = pkgs.mkShell {
           packages = with pkgs; [
             flatbuffers
-            buff_pkg
+            bfbs_pkg
             can_pkg
           ];
 
@@ -65,6 +65,8 @@
           shellHook = ''
             dbc_path=${pkgs.can_pkg}/car.dbc
             export DBC_PATH=$dbc_path
+            bfbs_path=${pkgs.bfbs_pkg}
+            export BFBS_PATH=$bfbs_path/dbc.bfbs
             libclang_path=${NIX_LIBCLANG_PATH}
             export LIBCLANG_PATH=$libclang_path
           '';
