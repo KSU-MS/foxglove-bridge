@@ -1,76 +1,70 @@
 {
   inputs = {
-    flake-utils.url = "github:numtide/flake-utils";
-    naersk = {
-      url = "github:nix-community/naersk";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-    can_pkg_flake.url = "github:KSU-MS/ksu-ms-dbc/main";
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    can_pkg_flake.url = "github:KSU-MS/ksu-ms-dbc/main";
   };
 
   outputs =
     {
-      flake-utils,
-      naersk,
-      can_pkg_flake,
       nixpkgs,
+      can_pkg_flake,
       ...
     }:
-    flake-utils.lib.eachDefaultSystem (
-      system:
-      let
-        pkgs = (import nixpkgs) {
-          inherit system;
-          overlays = [
-            can_pkg_flake.overlays.default
-            bfbs_overlay
+    let
+      systems = [
+        "x86_64-linux"
+        "aarch64-linux"
+        "x86_64-darwin"
+        "aarch64-darwin"
+      ];
+
+      forAllSystems = f: nixpkgs.lib.genAttrs systems (system: f system);
+
+      bfbs_overlay = final: prev: {
+        bfbs_pkg = final.callPackage ./dbc_to_bfbs/default.nix { };
+      };
+
+      rust_server_overlay = final: prev: {
+        server_pkg = final.callPackage ./rust_server/default.nix { };
+      };
+    in
+    {
+      devShells = forAllSystems (
+        system:
+        let
+          pkgs = import nixpkgs {
+            inherit system;
+            overlays = [
+              can_pkg_flake.overlays.default
+              bfbs_overlay
+              rust_server_overlay
+            ];
+          };
+
+          libclangPath = pkgs.lib.makeLibraryPath [
+            pkgs.llvmPackages_latest.libclang.lib
           ];
-        };
+        in
+        {
+          default = pkgs.mkShell {
+            packages = with pkgs; [
+              rustc
+              cargo
+              rust-analyzer
+              flatbuffers
+              bfbs_pkg
+              can_pkg
+              libclang
+              server_pkg
+            ];
 
-        bfbs_overlay = final: prev: {
-          bfbs_pkg = final.callPackage ./dbc_to_bfbs/dbc_to_bfbs.nix { };
-        };
-
-        naersk' = pkgs.callPackage naersk { };
-
-        NIX_LIBCLANG_PATH = pkgs.lib.makeLibraryPath [ pkgs.llvmPackages_latest.libclang.lib ];
-
-      in
-      {
-        overlays.default = nixpkgs.lib.composeManyExtensions [
-
-        ];
-
-        # For `nix build` & `nix run`:
-        packages.default = naersk'.buildPackage {
-          src = ./.;
-        };
-
-        # For `nix develop`:
-        devShell = pkgs.mkShell {
-          packages = with pkgs; [
-            flatbuffers
-            bfbs_pkg
-            can_pkg
-          ];
-
-          nativeBuildInputs = with pkgs; [
-            rustc
-            cargo
-            libclang
-          ];
-
-          # Setting up the environment variables you need during development.
-          shellHook = ''
-            dbc_path=${pkgs.can_pkg}/car.dbc
-            export DBC_PATH=$dbc_path
-            bfbs_path=${pkgs.bfbs_pkg}
-            export BFBS_PATH=$bfbs_path/dbc.bfbs
-            libclang_path=${NIX_LIBCLANG_PATH}
-            export LIBCLANG_PATH=$libclang_path
-          '';
-        };
-      }
-    );
+            shellHook = ''
+              export DBC_PATH=${pkgs.can_pkg}/car.dbc
+              export BFBS_PATH=${pkgs.bfbs_pkg}/dbc.bfbs
+              export LIBCLANG_PATH=${libclangPath}
+            '';
+          };
+        }
+      );
+    };
 }
