@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+chrono = "0.4.43"
 dbc-rs = "0.4.1"
 flatbuffers = "25.12.19"
 foxglove = "0.17.2"

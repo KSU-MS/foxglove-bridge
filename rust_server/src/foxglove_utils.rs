@@ -1,19 +1,20 @@
-use foxglove::{FoxgloveError, LazyContext, McapWriterHandle, WebSocketServerHandle};
+use foxglove::{Context, FoxgloveError, McapWriterHandle, WebSocketServerHandle};
+use std::sync::Arc;
 use std::{fs::File, io::BufWriter, path::Path};
 
-pub struct FoxgloveRuntime<'a> {
-    ctx: &'a LazyContext,
+pub struct FoxgloveRuntime {
+    pub ctx: Arc<Context>,
     file: Option<McapWriterHandle<BufWriter<File>>>,
     socket: Option<WebSocketServerHandle>,
 }
 
-impl<'a> FoxgloveRuntime<'a> {
+impl FoxgloveRuntime {
     pub fn start<P: AsRef<Path>>(
-        ctx: &'a LazyContext,
-        file: P,
+        ctx: Arc<Context>,
+        file_path: P,
         port: u16,
     ) -> Result<Self, FoxgloveError> {
-        let mcap = ctx.mcap_writer().create_new_buffered_file(file)?;
+        let mcap = ctx.mcap_writer().create_new_buffered_file(file_path)?;
 
         let ws = ctx
             .websocket_server()
@@ -42,7 +43,7 @@ impl<'a> FoxgloveRuntime<'a> {
     }
 }
 
-impl Drop for FoxgloveRuntime<'_> {
+impl Drop for FoxgloveRuntime {
     fn drop(&mut self) {
         self.stop();
     }
