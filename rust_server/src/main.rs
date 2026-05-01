@@ -3,44 +3,28 @@ mod foxglove_utils;
 mod random_utils;
 mod sources;
 
-use foxglove::{
-    schemas::{log::Level, Log, Timestamp},
-    Channel, Context,
-};
-use foxglove_utils::FoxgloveRuntime;
-use random_utils::pretty_print_system_time;
+use random_utils::{parse_device_file, LoggerType};
 
 fn main() {
-    let mut can_test = FoxgloveRuntime::start(
-        Context::new(),
-        pretty_print_system_time() + "-CAN.mcap",
-        8765,
-    )
-    .unwrap();
+    let args = LoggerType::evaluate_args();
 
-    std::thread::sleep(std::time::Duration::from_secs(10));
+    for logger_type in LoggerType::all().iter() {
+        evaluate_loggers(&args, logger_type.arg_name());
+    }
+}
 
-    let test_topic: Channel<Log> = can_test.ctx.channel_builder("/mrow").build();
+fn evaluate_loggers(args: &clap::ArgMatches, key: &str) {
+    if let Some(values) = args.get_many::<String>(key) {
+        for value in values {
+            let (device, file) = parse_device_file(value, key);
 
-    std::thread::sleep(std::time::Duration::from_secs(5));
-
-    test_topic.log(&Log {
-        level: Level::Info.into(),
-        timestamp: Some(Timestamp::now()),
-        message: "Morwoa :3".to_string(),
-        ..Default::default()
-    });
-
-    std::thread::sleep(std::time::Duration::from_secs(5));
-
-    test_topic.log(&Log {
-        level: Level::Info.into(),
-        timestamp: Some(Timestamp::now()),
-        message: "Mrow twua".to_string(),
-        ..Default::default()
-    });
-
-    std::thread::sleep(std::time::Duration::from_secs(2));
-
-    can_test.stop();
+            std::thread::spawn(move || {
+                if file.is_some() {
+                    println!("Starting logger on {} -> {}", device, file.unwrap());
+                } else {
+                    println!("Starting logger on {} -> Global", device);
+                }
+            });
+        }
+    }
 }
