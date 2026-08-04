@@ -55,11 +55,12 @@
               bfbs_pkg
               can_pkg
               libclang
-              server_pkg
+              # server_pkg
             ];
 
             shellHook = ''
               export DBC_PATH=${pkgs.can_pkg}/car.dbc
+              export FBS_PATH=${pkgs.bfbs_pkg}/dbc.fbs
               export BFBS_PATH=${pkgs.bfbs_pkg}/dbc.bfbs
               export LIBCLANG_PATH=${libclangPath}
             '';

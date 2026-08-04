@@ -43,8 +43,8 @@ impl FoxgloveRuntime {
     }
 }
 
-impl Drop for FoxgloveRuntime {
-    fn drop(&mut self) {
-        self.stop();
-    }
-}
+// impl Drop for FoxgloveRuntime {
+//     fn drop(&mut self) {
+//         self.stop();
+//     }
+// }

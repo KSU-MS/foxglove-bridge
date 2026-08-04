@@ -3,28 +3,19 @@ mod foxglove_utils;
 mod random_utils;
 mod sources;
 
-use random_utils::{parse_device_file, LoggerType};
+use foxglove::Context;
+use foxglove_utils::FoxgloveRuntime;
+use random_utils::pretty_print_system_time;
+
+use sources::start_loggers;
 
 fn main() {
-    let args = LoggerType::evaluate_args();
+    let global_fg: FoxgloveRuntime = FoxgloveRuntime::start(
+        Context::new(),
+        format!("{}.mcap", pretty_print_system_time()),
+        8765,
+    )
+    .unwrap();
 
-    for logger_type in LoggerType::all().iter() {
-        evaluate_loggers(&args, logger_type.arg_name());
-    }
-}
-
-fn evaluate_loggers(args: &clap::ArgMatches, key: &str) {
-    if let Some(values) = args.get_many::<String>(key) {
-        for value in values {
-            let (device, file) = parse_device_file(value, key);
-
-            std::thread::spawn(move || {
-                if file.is_some() {
-                    println!("Starting logger on {} -> {}", device, file.unwrap());
-                } else {
-                    println!("Starting logger on {} -> Global", device);
-                }
-            });
-        }
-    }
+    start_loggers(global_fg);
 }
